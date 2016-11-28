@@ -5,13 +5,16 @@ import tornado.websocket
 
 
 class ChatHandler(tornado.web.RequestHandler):
-    
+
     def get(self):
         self.render('chat.html')
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
-    connections = set()
+
+    def __init__(self, *args, **kwargs):
+        self.connections = set()
+        super().__init__(*args, **kwargs)
 
     def open(self):
         self.connections.add(self)

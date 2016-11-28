@@ -8,13 +8,8 @@ import urls
 
 class Application(tornado.web.Application):
     def __init__(self):
-        self.redis = '';
-
-        handlers = (
-            urls.urls, 
-            **settings.tornado_settings
-        )
-        super().__init__(handlers)
+        self.redis = ''
+        super().__init__(urls.urls, **settings.tornado_settings)
 
 def main():
     app = Application()

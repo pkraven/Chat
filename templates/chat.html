@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block main %}
+<script src="{{ static_url("js/angular.js") }}"></script>
+<script src="{{ static_url("js/angular-websocket.min.js") }}"></script>
+<script type="text/javascript" src="{{ static_url("js/main.js") }}"></script>
+<div ng-app="chatApp">
+    <div class="chat" ng-controller="ChatCtrl">
+        <div class="chat_main" >
+            <div class="messages">
+                <div class="messages_inner" ng-repeat="message in messages">
+                    <div class="messages_item">
+                        <b>[[ message.name ]]</b>
+                        <i>[[ message.time | date:'HH:mm' ]]</i>
+                        <span>[[ message.text ]]</span>
+                    </div>
+                </div>
+            </div>
+            <div class="users">
+                <div class="users_title">Users</div>
+                <div class="users_list">
+                    <ul>
+                        <li ng-repeat="user in users">
+                            [[ user.name ]]
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="form">
+            <form ng-submit="send()">
+                <textarea ng-model="form_text" name="form_text" placeholder="Enter your message"></textarea>
+                <input type="submit" value="Send!"/>
+            </form>
+        </div>
+    </div>
+</div>
+{% end %}
