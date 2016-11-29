@@ -19,14 +19,19 @@
                 <div class="users_title">Users</div>
                 <div class="users_list">
                     <ul>
-                        <li ng-repeat="user in users">
-                            [[ user.name ]]
+                        <li ng-repeat="user in users" 
+                            ng-click="select_user_to(user)" 
+                            ng-class="user.login == profile.login ? 'youself' : user.login == user_to.login ? 'selected' : ''">
+                            [[ user.login ]]
                         </li>
                     </ul>
                 </div>
             </div>
         </div>
         <div class="form">
+            <div class="form_title">
+                <b>[[ profile.login ]]</b> >> <span>[[ user_to.login ]]</span>
+            </div>
             <form ng-submit="send()">
                 <textarea ng-model="form_text" name="form_text" placeholder="Enter your message"></textarea>
                 <input type="submit" value="Send!"/>

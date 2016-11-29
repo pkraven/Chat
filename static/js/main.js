@@ -11,33 +11,40 @@ chatApp.config(function($httpProvider) {
 
 
 chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
+
     var dataStream = $websocket('ws://' + document.location.host + '/ws');
 
-    var messages = [];
-    var users = {};
+    var profile = {},
+        messages = [],
+        users = {'All': {
+            'login': 'All'
+        }};
 
     dataStream.onMessage(function(message) {
         var data = JSON.parse(message.data);
        
+        if (data.profile) {
+            profile['login'] = data.profile['login'];
+        }
+
         if (data.users) {
             for (i=0; i<data.users.length; i++) {
-                users[data.users[i]['id']] = data.users[i];
+                users[data.users[i]['login']] = data.users[i];
             }
         }
         
         if (data.remove_users) {
             for (i=0; i<data.remove_users.length; i++) {
-                delete users[data.remove_users[i]['id']];
+                delete users[data.remove_users[i]['login']];
             }
         }
 
         if (data.messages)    
             Array.prototype.push.apply(messages, data.messages);
-
-        //console.log(users);
     });
 
     return {
+        profile: profile,
         users: users,
         messages: messages,
         get: function(text) {
@@ -46,15 +53,21 @@ chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
     };
 }]);
 
+
 chatApp.controller('ChatCtrl', ['$scope', 'WebSocketChat', function($scope, WebSocketChat) {
 
     $scope.messages = WebSocketChat.messages;
     $scope.users = WebSocketChat.users;
+    $scope.profile = WebSocketChat.profile;
+    $scope.user_to = $scope.users['All'];
     
     $scope.send = function() {
-       // console.log($scope.message);
-        
-        WebSocketChat.get({'message': {'id': 1, 'text': $scope.form_text}});
+        WebSocketChat.get({'message': {'to': $scope.user_to['login'], 'text': $scope.form_text}});
         $scope.form_text = '';
     }
-}]);  
+
+    $scope.select_user_to = function(user) {
+        if (user['login'] != $scope.profile.login)
+            $scope.user_to = user;
+    }
+}]); 

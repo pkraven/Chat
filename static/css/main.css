@@ -104,7 +104,14 @@ a{
                         width:100%;
                         list-style-type: none;
                         text-align:left;
+                        cursor:pointer;
                     }
+                        .users ul li.youself{
+                            color:green;
+                        }
+                        .users ul li.selected{
+                            color:red;
+                        }
     .form{
         position:relative;
         float:left;
@@ -115,16 +122,27 @@ a{
         padding:20px;
         margin-top:20px;
     }
-        .form textarea{
+        .form_title{
             position:relative;
             float:left;
-            width:100%;
-            height:70px;
-            padding:10px;
-            box-sizing: border-box;
+            margin-bottom:10px;
         }
-        .form input{
-            position:relative;
-            float:left;
-            margin-top:10px;
-        }
+            .form_title b{
+                color:green;
+            }
+            .form_title span{
+                color:red;
+            }
+            .form textarea{
+                position:relative;
+                float:left;
+                width:100%;
+                height:70px;
+                padding:10px;
+                box-sizing: border-box;
+            }
+            .form input{
+                position:relative;
+                float:left;
+                margin-top:10px;
+            }

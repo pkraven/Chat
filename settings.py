@@ -7,13 +7,11 @@ tornado_settings = {
     'cookie_secret': 'L9LwECiNRxq2N0N2eGxx9MZlrpmuMEimlydNX/vt1LM=',
     'login_url': '/login',
     'xsrf_cookies': True,
-    'debug': True
+    'debug': True,
+    'port': 8888
 }
 
 redis_settings = {
-    
-}
-
-options = {
-    'port': 8888
+    'host': '127.0.0.1',
+    'port': 6379
 }
