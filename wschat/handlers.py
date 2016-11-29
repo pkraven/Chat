@@ -54,7 +54,7 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
                 users.append(conn.user)
         self.write_message({'users': users})
 
-    @tornado.gen.engine
+    @tornado.gen.coroutine
     def load_messages(self):
         with self.application.redis.pipeline() as pipe:
             pipe.lrange('user:{}:messages_sent'.format(
@@ -83,7 +83,7 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
         self.save_to_base(message)
         self.send_messages([message])
 
-    @tornado.gen.engine
+    @tornado.gen.coroutine
     def save_to_base(self, message):
         with self.application.redis.pipeline() as pipe:
             id = str(uuid.uuid4())[:8]

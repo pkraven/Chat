@@ -2,6 +2,7 @@
 {% block main %}
 <div class="login">
     <form action="{{ reverse_url('login') }}" method="post" id="login_form">
+        {% module xsrf_form_html() %}
         <div>
             <label for="login">Username</label>
             <input id="login" name="login" type="text" value="">
@@ -14,6 +15,7 @@
             <input type="submit" value="Sign In">
         </div>
     </form>
+    <div>{{ error }}</div>
     <div class="reg">
         <a href="{{ reverse_url('reg') }}">Sign Up</a>
     </div>
