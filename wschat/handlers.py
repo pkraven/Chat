@@ -21,7 +21,7 @@ class ChatHandler(Login, tornado.web.RequestHandler):
 
     @auth_async
     def get(self):
-        self.render('chat.html')
+        self.render('chat.html', user=self.user)
 
 
 class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
@@ -29,6 +29,7 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
 
     @auth_ws_async
     def open(self):
+        print(self.get_argument('token'))
         self.application.connections.append(self)
         self.load_profile()
         self.load_users()

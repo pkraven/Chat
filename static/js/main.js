@@ -11,8 +11,8 @@ chatApp.config(function($httpProvider) {
 
 
 chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
-
-    var dataStream = $websocket('ws://' + document.location.host + '/ws');
+    //token = '1111';
+    var dataStream = $websocket('ws://' + document.location.host + '/ws?token=' + token);
 
     var profile = {},
         messages = [],
@@ -37,6 +37,10 @@ chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
             for (i=0; i<data.remove_users.length; i++) {
                 delete users[data.remove_users[i]['login']];
             }
+        }
+
+        if (data.error) {
+            alert(data.error);
         }
 
         if (data.messages)    
@@ -81,16 +85,13 @@ chatApp.controller('ChatCtrl', ['$scope', 'WebSocketChat', function($scope, WebS
 
 
 chatApp.filter('utcToLocal', utcToLocal);
-
-    function utcToLocal($filter) {
-        return function (date, format) {
-            if (!date)
-                return '';
-
-            date = new Date(date);
-            var offset = date.getTimezoneOffset() / 60,
-                hours = date.getHours();
-            date.setHours(hours - offset);
-            return $filter('date')(date, format);
-        };
-    }
+function utcToLocal($filter) {
+    return function (date, format) {
+        if (!date) return '';
+        date = new Date(date);
+        var offset = date.getTimezoneOffset() / 60,
+            hours = date.getHours();
+        date.setHours(hours - offset);
+        return $filter('date')(date, format);
+    };
+}

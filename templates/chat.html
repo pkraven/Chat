@@ -9,9 +9,18 @@
             <div class="messages">
                 <div class="messages_inner" ng-repeat="message in messages | orderBy: 'time'">
                     <div class="messages_item">
-                        <b>[[ users[message.from].name ]]</b>
-                        <i>[[ message.date | utcToLocal : 'HH:mm:ss' ]]</i>
-                        <span>[[ message.text ]]</span>
+                        <div class="title">
+                            <b>[[ message.from ]]</b> >> 
+                            <i  ng-repeat="to in message.to" 
+                                ng-show="message.to.length">
+                                [[ to ]]&nbsp;
+                            </i>
+                            <i ng-show="message.to.length == 0">All</i>
+                        </div>
+                        <div class="text">
+                            <i>[[ message.date | utcToLocal : 'HH:mm:ss' ]]</i>
+                            <span>[[ message.text ]]</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -22,7 +31,7 @@
                         <li ng-repeat="user in users" 
                             ng-click="select_user_to(user.login)" 
                             ng-class="users_to.indexOf(user.login) != -1 ? 'selected' : ''">
-                            [[ user.name ]]
+                            [[ user.login ]]
                         </li>
                         <li ng-click="select_user_to('all')" 
                             ng-class="users_to.length == 0 ? 'selected' : ''">
@@ -34,11 +43,11 @@
         </div>
         <div class="form">
             <div class="form_title">
-                <b>[[ profile.name ]]</b> >> 
+                <b>[[ profile.login ]]</b> >> 
                 <span>
                     <i  ng-repeat="login in users_to" 
                         ng-show="users_to.length">
-                        [[ users[login].name ]]&nbsp;
+                        [[ login ]]&nbsp;
                     </i>
                     <i ng-show="users_to.length == 0">All</i>
                 </span>
@@ -50,4 +59,7 @@
         </div>
     </div>
 </div>
+<script>
+    var token = '{{ user['token'] }}';
+</script>
 {% end %}
