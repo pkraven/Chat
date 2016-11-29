@@ -16,15 +16,15 @@ chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
 
     var profile = {},
         messages = [],
-        users = {'All': {
-            'login': 'All'
-        }};
+        users = {};
 
     dataStream.onMessage(function(message) {
         var data = JSON.parse(message.data);
+        console.log(data);
        
         if (data.profile) {
             profile['login'] = data.profile['login'];
+            profile['name'] = data.profile['name'];
         }
 
         if (data.users) {
@@ -59,15 +59,38 @@ chatApp.controller('ChatCtrl', ['$scope', 'WebSocketChat', function($scope, WebS
     $scope.messages = WebSocketChat.messages;
     $scope.users = WebSocketChat.users;
     $scope.profile = WebSocketChat.profile;
-    $scope.user_to = $scope.users['All'];
+    $scope.users_to = [];
     
     $scope.send = function() {
-        WebSocketChat.get({'message': {'to': $scope.user_to['login'], 'text': $scope.form_text}});
+        WebSocketChat.get({'message': {'to': $scope.users_to, 'text': $scope.form_text}});
         $scope.form_text = '';
     }
 
-    $scope.select_user_to = function(user) {
-        if (user['login'] != $scope.profile.login)
-            $scope.user_to = user;
+    $scope.select_user_to = function(login) {
+        if (login != $scope.profile.login)
+        {
+            if (login == 'all')   
+                $scope.users_to = [];
+            else if ($scope.users_to.indexOf(login) == -1)
+                $scope.users_to.push(login);
+            else
+                $scope.users_to.splice($scope.users_to.indexOf(login), 1);
+        }
     }
 }]); 
+
+
+chatApp.filter('utcToLocal', utcToLocal);
+
+    function utcToLocal($filter) {
+        return function (date, format) {
+            if (!date)
+                return '';
+
+            date = new Date(date);
+            var offset = date.getTimezoneOffset() / 60,
+                hours = date.getHours();
+            date.setHours(hours - offset);
+            return $filter('date')(date, format);
+        };
+    }

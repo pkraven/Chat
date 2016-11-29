@@ -1,58 +1,46 @@
+# -*- coding: utf-8 -*-
 """
-    Redis base:
-
-        user:login:list - {'name': 'Name', 'pass': 'password'}
-        user:login:messages - [message_id1, message_id2, ...]   - messages for only this user
-        
-        user:all:messages - [message_id1, message_id2, ...]   - messages for all users
-
-        message:id - {'text': 'Text', 'from': user_login, 'to': user_login, 'time': timestamp}
+    WebSocket chat module
 """
 
-import json
 import datetime
 import time
-import random
 import uuid
 
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import tornado.gen
-import tornado.escape
+from tornado.escape import json_decode, json_encode
+
+from auth.handlers import Login, auth_async, auth_ws_async
 
 
-class ChatHandler(tornado.web.RequestHandler):
+class ChatHandler(Login, tornado.web.RequestHandler):
+    """Render chat template"""
 
+    @auth_async
     def get(self):
         self.render('chat.html')
 
 
-class WSHandler(tornado.websocket.WebSocketHandler):
+class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
+    """Main websocket class"""
 
-    def __init__(self, *args, **kwargs):
-        self.connections = set()
-        super().__init__(*args, **kwargs)
-
+    @auth_ws_async
     def open(self):
-        # test
-        self.user = {
-            #'login': str(random.randint(1,100)) + 'Pavel'
-            'login': 'Pavel'
-        }
-
-        self.connections.add(self)
+        self.application.connections.append(self)
         self.load_profile()
         self.load_users()
         self.load_messages()
-        self.send_add_users([self.user])
+        self.add_user(self.user)
 
     def on_close(self):
-        self.connections.remove(self)
-        self.send_remove_users([self.user])
+        self.application.connections.remove(self)
+        self.remove_user(self.user)
 
     def on_message(self, data):
-        data_dict = json.loads(data)
+        data_dict = json_decode(data)
         if data_dict and 'message' in data_dict:
             self.save_message(data_dict['message'])
 
@@ -61,47 +49,61 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def load_users(self):
         users = []
-        for conn in self.connections:
-            users.append(conn.user)
+        for conn in self.application.connections:
+            if conn.user != self.user:
+                users.append(conn.user)
         self.write_message({'users': users})
-                
+
     @tornado.gen.engine
     def load_messages(self):
         with self.application.redis.pipeline() as pipe:
-            pipe.lrange('user:{}:messages'.format(self.user['login']), 0, -1)
-            pipe.lrange('user:All:messages', 0, -1)
-            messages = yield tornado.gen.Task(pipe.execute)
-        messages = [el for lst in messages for el in lst]
-        #self.write_message({'messages': messages})
-
-    @tornado.gen.engine
-    def save_to_base(self, message):
-        id = str(uuid.uuid4())[:8];
-        message_json = tornado.escape.json_encode(message)
+            pipe.lrange('user:{}:messages_sent'.format(
+                self.user['login']), 0, 30)
+            pipe.lrange('user:{}:messages_received'.format(
+                self.user['login']), 0, 30)
+            pipe.lrange('user:all:messages', 0, 30)
+            messages_id = yield tornado.gen.Task(pipe.execute)
+            messages_id = [el for lst in messages_id for el in lst]
         with self.application.redis.pipeline() as pipe:
-            pipe.rpush('user:{}:messages'.format(message['to']), id)
-            pipe.set('message:{}'.format(id), message_json)
-        yield tornado.gen.Task(pipe.execute)
+            for id in messages_id:
+                pipe.get('message:{}'.format(id))
+            messages = yield tornado.gen.Task(pipe.execute)
+            messages = [json_decode(message) for message in messages]
+        self.write_message({'messages': messages})
 
     def save_message(self, message):
-        print(message)
-        message_new = {
+        message = {
             'text': message['text'],
             'from': self.user['login'],
             'to': message['to'],
-            'time': time.time()
+            'time': time.time(),
+            'date': datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         }
-        self.save_to_base(message_new)
-        self.send_messages([message_new])
+        self.save_to_base(message)
+        self.send_messages([message])
+
+    @tornado.gen.engine
+    def save_to_base(self, message):
+        with self.application.redis.pipeline() as pipe:
+            id = str(uuid.uuid4())[:8]
+            pipe.set('message:{}'.format(id), json_encode(message))
+            if not message['to']:
+                pipe.lpush('user:all:messages', id)
+            else:
+                pipe.lpush('user:{}:messages_sent'.format(message['from']), id)
+                for login in message['to']:
+                    pipe.lpush('user:{}:messages_received'.format(login), id)
+            yield tornado.gen.Task(pipe.execute)
 
     def send_messages(self, messages):
-        for conn in self.connections:
+        for conn in self.application.connections:
             conn.write_message({'messages': messages})
 
-    def send_remove_users(self, users):
-        for conn in self.connections:
-            conn.write_message({'remove_users': users})
+    def add_user(self, user):
+        for conn in self.application.connections:
+            if conn.user != self.user:
+                conn.write_message({'users': [user]})
 
-    def send_add_users(self, users):
-        for conn in self.connections:
-            conn.write_message({'users': users})
+    def remove_user(self, user):
+        for conn in self.application.connections:
+            conn.write_message({'remove_users': [user]})

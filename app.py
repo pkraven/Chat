@@ -9,6 +9,7 @@ import urls
 
 class Application(tornado.web.Application):
     def __init__(self):
+        self.connections = []
         self.redis = tornadoredis.Client(
                 **settings.redis_settings,
             )

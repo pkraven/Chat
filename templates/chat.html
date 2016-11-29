@@ -7,10 +7,10 @@
     <div class="chat" ng-controller="ChatCtrl">
         <div class="chat_main" >
             <div class="messages">
-                <div class="messages_inner" ng-repeat="message in messages">
+                <div class="messages_inner" ng-repeat="message in messages | orderBy: 'time'">
                     <div class="messages_item">
-                        <b>[[ message.name ]]</b>
-                        <i>[[ message.time | date:'HH:mm' ]]</i>
+                        <b>[[ users[message.from].name ]]</b>
+                        <i>[[ message.date | utcToLocal : 'HH:mm:ss' ]]</i>
                         <span>[[ message.text ]]</span>
                     </div>
                 </div>
@@ -20,9 +20,13 @@
                 <div class="users_list">
                     <ul>
                         <li ng-repeat="user in users" 
-                            ng-click="select_user_to(user)" 
-                            ng-class="user.login == profile.login ? 'youself' : user.login == user_to.login ? 'selected' : ''">
-                            [[ user.login ]]
+                            ng-click="select_user_to(user.login)" 
+                            ng-class="users_to.indexOf(user.login) != -1 ? 'selected' : ''">
+                            [[ user.name ]]
+                        </li>
+                        <li ng-click="select_user_to('all')" 
+                            ng-class="users_to.length == 0 ? 'selected' : ''">
+                            All
                         </li>
                     </ul>
                 </div>
@@ -30,7 +34,14 @@
         </div>
         <div class="form">
             <div class="form_title">
-                <b>[[ profile.login ]]</b> >> <span>[[ user_to.login ]]</span>
+                <b>[[ profile.name ]]</b> >> 
+                <span>
+                    <i  ng-repeat="login in users_to" 
+                        ng-show="users_to.length">
+                        [[ users[login].name ]]&nbsp;
+                    </i>
+                    <i ng-show="users_to.length == 0">All</i>
+                </span>
             </div>
             <form ng-submit="send()">
                 <textarea ng-model="form_text" name="form_text" placeholder="Enter your message"></textarea>
