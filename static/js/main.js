@@ -11,7 +11,7 @@ chatApp.config(function($httpProvider) {
 
 
 chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
-    //token = '1111';
+    token = '1111';
     var dataStream = $websocket('ws://' + document.location.host + '/ws?token=' + token);
 
     var profile = {},
@@ -39,8 +39,8 @@ chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
             }
         }
 
-        if (data.error) {
-            alert(data.error);
+        if (data.error && data.error == 'not login') {
+            location.href = '/logout';
         }
 
         if (data.messages)    

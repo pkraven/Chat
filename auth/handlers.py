@@ -55,33 +55,36 @@ class Login(object):
 class LoginHandler(Login, tornado.web.RequestHandler):
 
     def get(self):
-        self.render('login.html', error='')
+        self.render('login.html', flash={})
 
     @tornado.gen.coroutine
     def post(self):
         login = self.get_argument('login', None)
         password = self.get_argument('password', None)
 
-        error = ''
+        flash = {}
         if not login or not password:
-            error = 'All fields must be filled.'
+            flash['error'] = 'All fields must be filled.'
         else:
             r = self.application.redis
             user_data = yield tornado.gen.Task(r.get, 'user:{}:data'.format(login))
             if not user_data:
-                error = 'Wrong username.'
+                flash['error'] = 'Wrong username.'
             else:
                 user_data = json_decode(user_data)
                 if user_data['password'] != self.hash_pass(password):
-                    error = 'Wrong password.'
+                    flash['error'] = 'Wrong password.'
                 else:
                     token = uuid.uuid4()
-                    yield tornado.gen.Task(r.set, 'user:{}:token'.format(login), 
-                        token)
-                    self.set_secure_cookie('login', login)
+                    token_key = 'user:{}:token'.format(login)
+                    with self.application.redis.pipeline() as pipe:
+                        pipe.set(token_key, token)
+                        pipe.expire(token_key, 24 * 60 * 60)
+                        yield tornado.gen.Task(pipe.execute)
+                    self.set_secure_cookie('login', login, expires_days=1)
                     self.redirect(self.reverse_url('chat'))
 
-        self.render('login.html', error=error)
+        self.render('login.html', flash=flash)
 
 
 class LogoutHandler(Login, tornado.web.RequestHandler):
@@ -89,16 +92,17 @@ class LogoutHandler(Login, tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def get(self):
         login = native_str(self.get_secure_cookie('login'))
-        r = self.application.redis
-        yield tornado.gen.Task(r.delete, 'user:{}:token'.format(login))
-        self.clear_all_cookies()
-        self.redirect(self.reverse_url('login'))
+        if login:
+            r = self.application.redis
+            yield tornado.gen.Task(r.delete, 'user:{}:token'.format(login))
+            self.clear_all_cookies()
+            self.redirect(self.reverse_url('login'))
 
 
 class RegHandler(Login, tornado.web.RequestHandler):
 
     def get(self):
-        self.render('reg.html', error='')
+        self.render('reg.html', flash={})
 
     @tornado.gen.coroutine
     def post(self):
@@ -106,14 +110,14 @@ class RegHandler(Login, tornado.web.RequestHandler):
         name = self.get_argument('name', None)
         password = self.get_argument('password', None)
 
-        error = ''
+        flash = {}
         if not login or not name or not password:
-            error = 'All fields must be filled.'
+            flash['error'] = 'All fields must be filled.'
         else:
             r = self.application.redis
             user = yield tornado.gen.Task(r.get, 'user:{}:data'.format(login))
             if user:
-                error = 'User "{}" already exist.'.format(login)
+                flash['error'] = 'User "{}" already exist.'.format(login)
             else:
                 password = self.hash_pass(password)
                 user_data = {
@@ -122,10 +126,9 @@ class RegHandler(Login, tornado.web.RequestHandler):
                 }
                 yield tornado.gen.Task(r.set, 'user:{}:data'.format(login),
                                        json_encode(user_data))
-                self.set_secure_cookie('login', login)
-                self.redirect(self.reverse_url('chat'))
+                flash['ok'] = 'You have been successfully registered!'
 
-        self.render('reg.html', error=error)
+        self.render('reg.html', flash=flash)
 
 
 def auth_async(method):

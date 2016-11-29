@@ -37,7 +37,9 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
         self.add_user(self.user)
 
     def on_close(self):
-        self.application.connections.remove(self)
+        for key, conn in enumerate(self.application.connections):
+            if conn == self:
+                del self.application.connections[key]
         self.remove_user(self.user)
 
     def on_message(self, data):
