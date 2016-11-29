@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="login">
+    <form action="{{ reverse_url('login') }}" method="post" id="login_form">
+        <div>
+            <label for="login">Username</label>
+            <input id="login" name="login" type="text" value="">
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" value="">
+        </div>
+        <div id="form_btn">
+            <input type="submit" value="Sign In">
+        </div>
+    </form>
+    <div class="reg">
+        <a href="{{ reverse_url('reg') }}">Sign Up</a>
+    </div>
+</div>
+{% end %}

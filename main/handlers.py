@@ -1,8 +1,10 @@
-
 import tornado.web
 
+from auth.handlers import Login, auth_async
 
-class MainHandler(tornado.web.RequestHandler):
+
+class MainHandler(Login, tornado.web.RequestHandler):
     
+    @auth_async
     def get(self):
-        self.redirect(self.reverse_url('chat'))
+        self.render('base.html')

@@ -64,12 +64,13 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
             pipe.lrange('user:all:messages', 0, 30)
             messages_id = yield tornado.gen.Task(pipe.execute)
             messages_id = [el for lst in messages_id for el in lst]
-        with self.application.redis.pipeline() as pipe:
-            for id in messages_id:
-                pipe.get('message:{}'.format(id))
-            messages = yield tornado.gen.Task(pipe.execute)
-            messages = [json_decode(message) for message in messages]
-        self.write_message({'messages': messages})
+        if messages_id:
+            with self.application.redis.pipeline() as pipe:
+                for id in messages_id:
+                    pipe.get('message:{}'.format(id))
+                messages = yield tornado.gen.Task(pipe.execute)
+                messages = [json_decode(message) for message in messages]
+            self.write_message({'messages': messages})
 
     def save_message(self, message):
         message = {
