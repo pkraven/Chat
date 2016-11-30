@@ -11,7 +11,6 @@ chatApp.config(function($httpProvider) {
 
 
 chatApp.factory('WebSocketChat', ['$websocket', function($websocket) {
-    token = '1111';
     var dataStream = $websocket('ws://' + document.location.host + '/ws?token=' + token);
 
     var profile = {},
@@ -66,8 +65,11 @@ chatApp.controller('ChatCtrl', ['$scope', 'WebSocketChat', function($scope, WebS
     $scope.users_to = [];
     
     $scope.send = function() {
-        WebSocketChat.get({'message': {'to': $scope.users_to, 'text': $scope.form_text}});
-        $scope.form_text = '';
+        if ($scope.form_text && $scope.users_to)
+        {
+            WebSocketChat.get({'message': {'to': $scope.users_to, 'text': $scope.form_text}});
+            $scope.form_text = '';
+        }
     }
 
     $scope.select_user_to = function(login) {
@@ -88,8 +90,8 @@ chatApp.filter('utcToLocal', utcToLocal);
 function utcToLocal($filter) {
     return function (date, format) {
         if (!date) return '';
-        date = new Date(date);
-        var offset = date.getTimezoneOffset() / 60,
+        date = new Date(date.replace(/-/g,'/'));
+        var offset = (new Date()).getTimezoneOffset() / 60,
             hours = date.getHours();
         date.setHours(hours - offset);
         return $filter('date')(date, format);

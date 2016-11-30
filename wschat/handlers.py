@@ -29,7 +29,6 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
 
     @auth_ws_async
     def open(self):
-        print(self.get_argument('token'))
         self.application.connections.append(self)
         self.load_profile()
         self.load_users()
@@ -84,7 +83,7 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
             'date': datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         }
         self.save_to_base(message)
-        self.send_messages([message])
+        self.send_message(message)
 
     @tornado.gen.coroutine
     def save_to_base(self, message):
@@ -99,9 +98,11 @@ class WebSocketHandler(Login, tornado.websocket.WebSocketHandler):
                     pipe.lpush('user:{}:messages_received'.format(login), id)
             yield tornado.gen.Task(pipe.execute)
 
-    def send_messages(self, messages):
+    def send_message(self, message):
         for conn in self.application.connections:
-            conn.write_message({'messages': messages})
+            if not message['to'] or conn.user['login'] in message['to'] \
+                    or message['from'] == conn.user['login']:
+                conn.write_message({'messages': [message]})
 
     def add_user(self, user):
         for conn in self.application.connections:

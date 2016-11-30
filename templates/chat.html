@@ -3,54 +3,61 @@
 <script src="{{ static_url("js/angular.js") }}"></script>
 <script src="{{ static_url("js/angular-websocket.min.js") }}"></script>
 <script type="text/javascript" src="{{ static_url("js/main.js") }}"></script>
-<div ng-app="chatApp">
-    <div class="chat" ng-controller="ChatCtrl">
-        <div class="chat_main" >
+<div class="chat" ng-app="chatApp">
+    <div class="chat_inner" ng-controller="ChatCtrl">
+        <div class="chat_main">
+            <div class="title">WebSocket Chat</div>
             <div class="messages">
                 <div class="messages_inner" ng-repeat="message in messages | orderBy: 'time'">
                     <div class="messages_item">
-                        <div class="title">
-                            <b>[[ message.from ]]</b> >> 
+                        <div class="message_title">
+                            <span>[[ message.date | utcToLocal : 'HH:mm:ss' ]]</span>
+                            <b ng-class="message.from == profile.login ? 'selected' : ''">
+                                [[ message.from ]]
+                            </b> >> 
                             <i  ng-repeat="to in message.to" 
-                                ng-show="message.to.length">
+                                ng-show="message.to.length"
+                                ng-class="to == profile.login ? 'selected' : ''">
                                 [[ to ]]&nbsp;
                             </i>
                             <i ng-show="message.to.length == 0">All</i>
                         </div>
-                        <div class="text">
-                            <i>[[ message.date | utcToLocal : 'HH:mm:ss' ]]</i>
-                            <span>[[ message.text ]]</span>
+                        <div class="message_text">
+                            [[ message.text ]]
                         </div>
                     </div>
                 </div>
             </div>
             <div class="users">
-                <div class="users_title">Users</div>
-                <div class="users_list">
-                    <ul>
-                        <li ng-repeat="user in users" 
-                            ng-click="select_user_to(user.login)" 
-                            ng-class="users_to.indexOf(user.login) != -1 ? 'selected' : ''">
-                            [[ user.login ]]
-                        </li>
-                        <li ng-click="select_user_to('all')" 
-                            ng-class="users_to.length == 0 ? 'selected' : ''">
-                            All
-                        </li>
-                    </ul>
+                <div class="users_inner">
+                    <div class="users_title">Users</div>
+                    <div class="users_list">
+                        <ul>
+                            <li ng-repeat="user in users" 
+                                ng-click="select_user_to(user.login)" 
+                                ng-class="users_to.indexOf(user.login) != -1 ? 'selected' : ''">
+                                [[ user.login ]]
+                            </li>
+                            <li ng-click="select_user_to('all')" 
+                                ng-class="users_to.length == 0 ? 'selected' : ''">
+                                All
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="users_links">
+                    <a href="{{ reverse_url('logout') }}">Logout</a>
                 </div>
             </div>
         </div>
         <div class="form">
             <div class="form_title">
                 <b>[[ profile.login ]]</b> >> 
-                <span>
-                    <i  ng-repeat="login in users_to" 
-                        ng-show="users_to.length">
-                        [[ login ]]&nbsp;
-                    </i>
-                    <i ng-show="users_to.length == 0">All</i>
-                </span>
+                <i  ng-repeat="login in users_to" 
+                    ng-show="users_to.length">
+                    [[ login ]]&nbsp;
+                </i>
+                <i ng-show="users_to.length == 0">All</i>
             </div>
             <form ng-submit="send()">
                 <textarea ng-model="form_text" name="form_text" placeholder="Enter your message"></textarea>

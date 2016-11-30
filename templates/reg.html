@@ -1,24 +1,34 @@
 {% extends "base.html" %}
 {% block main %}
 <div class="login">
-    <form action="{{ reverse_url('reg') }}" method="post" id="login_form">
-        {% module xsrf_form_html() %}
-        <div>
-            <label for="login">Username</label>
-            <input id="login" name="login" type="text" value="">
+    <div class="login_inner">
+        <div class="title">Registration</div>
+        <form action="{{ reverse_url('reg') }}" method="post" id="login_form">
+            {% module xsrf_form_html() %}
+            <div>
+                <label for="login">Username</label>
+                <input id="login" name="login" type="text" value="">
+            </div>
+            <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" value="">
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" value="">
+            </div>
+            <div id="form_btn">
+                <input type="submit" value="Sign Up">
+            </div>
+        </form>
+        {% if 'error' in flash %}
+        <div class="error">{{ flash['error'] }}</div>
+        {% elif 'ok' in flash %}
+        <div class="error ok">{{ flash['ok'] }}</div> 
+        {% end %}
+        <div class="link">
+            <a href="{{ reverse_url('login') }}">Sign In</a>
         </div>
-        <div>
-            <label for="name">Name</label>
-            <input id="name" name="name" type="text" value="">
-        </div>
-        <div>
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" value="">
-        </div>
-        <div id="form_btn">
-            <input type="submit" value="Sign Up">
-        </div>
-    </form>
-    <div>{{ error }}</div>
+    </div>
 </div>
 {% end %}
