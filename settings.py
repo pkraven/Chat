@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import os
 
 tornado_settings = {
@@ -7,7 +7,7 @@ tornado_settings = {
     'cookie_secret': 'L9LwECiNRxq2N0N2eGxx9MZlrpmuMEimlydNX/vt1LM=',
     'login_url': '/login',
     'xsrf_cookies': True,
-    'debug': True,
+    'debug': False,
     'port': 8888
 }
 

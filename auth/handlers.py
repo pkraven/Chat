@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+    Login and Registration module
+"""
 
 import random
 import hashlib
